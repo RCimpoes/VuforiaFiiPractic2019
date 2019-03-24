@@ -3,38 +3,67 @@ using System.Collections;
 
 public class BallLauncher : MonoBehaviour
 {
+    public GameObject ballParent;
 
     public Rigidbody ball;
     public Transform target;
 
-    public float h = 25;
-    public float gravity = -18;
+    public float h = 0.25f;
+    public float gravity = -1;
 
     public bool debugPath;
+
+    private float errorFactor = 0.5f;
+    private Vector3 error;
+    private Vector3 userInput;
+
+    float startTime;
 
     void Start()
     {
         ball.useGravity = false;
+        error = new Vector3(0, errorFactor, 0);
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.LeftAlt))
         {
-            Launch();
+            ResetBallVelocity();
         }
 
-        if (debugPath)
+        if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            DrawPath();
+            startTime = Time.time;
+            Debug.Log("Space Pressed");
         }
+        if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            Debug.Log(Time.time - startTime);
+            float userDelay = (Time.time - startTime) / 2;
+            Launch(userDelay);
+        }
+
+
+
     }
 
-    void Launch()
+    void Launch(float userDelay)
     {
+        Vector3 corection = new Vector3(0, userDelay, 0);
         Physics.gravity = Vector3.up * gravity;
         ball.useGravity = true;
-        ball.velocity = CalculateLaunchData().initialVelocity;
+        ball.velocity = CalculateLaunchData().initialVelocity - error + corection;
+    }
+
+    public void ResetBallVelocity()
+    {
+
+        ball.transform.position = ballParent.transform.position;
+        ball.transform.rotation = new Quaternion(0, 0, 0, 0);
+        Rigidbody rb = ball.transform.GetComponent<Rigidbody>();
+        rb.useGravity = false;
+       
     }
 
     LaunchData CalculateLaunchData()
